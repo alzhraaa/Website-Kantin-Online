@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemesanan Kantin Online</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #ffe6f2, #ffb3d9);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page {
+    display: none;
+    padding: 20px;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .container {
+    max-width: 800px;
+    margin: auto;
+  }
+
+  h1, h2 {
+    text-align: center;
+    color: #d63384;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+  }
+
+  .menu-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .btn-custom {
+    background: linear-gradient(45deg, #d63384, #ff69b4);
+    border: none;
+    padding: 12px 20px;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin: 5px;
+  }
+
+  .btn-custom:hover {
+    background: linear-gradient(45deg, #bf2b78, #ff1493);
+    transform: scale(1.05);
+  }
+
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .qty-controls button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #d63384;
+    color: white;
+    cursor: pointer;
+  }
+
+  .total {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d63384;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- Modal Konfirmasi -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Konfirmasi</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirmMessage">Apakah Anda yakin?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn-custom" id="confirmBtn">Ya</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 1. BERANDA ===================== -->
+<div class="page" id="pageHome">
+  <h1><i class="fas fa-utensils"></i> Website Pemesanan Kantin Online</h1>
+  <div class="card text-center">
+    <p>Selamat datang! Silakan mulai memesan makanan favorit Anda.</p>
+    <button class="btn-custom w-100" onclick="goto('pageMenu')">Tampilkan Menu</button>
+  </div>
+  <div class="footer">&copy; 2023 Kantin Sekolah. Dibuat dengan ❤️</div>
+</div>
+
+<!-- ===================== 2. MENU ===================== -->
+<div class="page" id="pageMenu">
+  <h2>Pilih Menu</h2>
+
+  <input type="text" class="form-control mb-3" id="searchInput" placeholder="Cari menu...">
+
+  <div class="text-center mb-3">
+    <button class="btn btn-outline-primary" onclick="filterCategory('all')">Semua</button>
+    <button class="btn btn-outline-primary" onclick="filterCategory('makanan')">Makanan</button>
+    <button class="btn btn-outline-primary" onclick="filterCategory('minuman')">Minuman</button>
+  </div>
+
+  <div id="menuList" class="row"></div>
+
+  <h2>Keranjang</h2>
+  <div id="cartList"></div>
+
+  <div class="d-flex justify-content-between">
+    <p class="total">Total: Rp <span id="totalCart">0</span></p>
+    <button class="btn btn-danger" onclick="clearCart()">Kosongkan</button>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <button class="btn-custom" onclick="goto('pageHome')">Kembali</button>
+    <button class="btn-custom" onclick="confirmAction('gotoPembayaran()', 'Lanjut ke pembayaran?')">Lanjut</button>
+  </div>
+</div>
+
+<!-- ===================== 3. PEMBAYARAN ===================== -->
+<div class="page" id="pagePay">
+  <h2>Metode Pembayaran</h2>
+
+  <div class="card">
+    <label><input type="radio" name="pay" value="cash"> Cash</label><br>
+    <label><input type="radio" name="pay" value="non"> Transfer</label>
+
+    <p class="total mt-3">Total: Rp <span id="payTotal">0</span></p>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <button class="btn-custom" onclick="goto('pageMenu')">Kembali</button>
+    <button class="btn-custom" onclick="confirmAction('prosesPembayaran()', 'Yakin lanjut?')">Lanjut</button>
+  </div>
+</div>
+
+<!-- ===================== 4A CASH ===================== -->
+<div class="page" id="pageCash">
+  <h2>Bayar di Kantin</h2>
+  <div class="card text-center">
+    <p>Tunjukkan nama Anda ke kasir.</p>
+    <p><b>Kode Pesanan: <span id="orderCode"></span></b></p>
+  </div>
+  <button class="btn-custom w-100" onclick="confirmAction('pembayaranBerhasil()', 'Sudah bayar?')">Saya Sudah Bayar</button>
+</div>
+
+<!-- ===================== 4B NON TUNAI ===================== -->
+<div class="page" id="pageNonTunai">
+  <h2>Pembayaran Non Tunai</h2>
+  <div class="card text-center">
+    <p><b>Kode Transfer:</b></p>
+    <h1 style="color:#d63384;">8877-2299-5544</h1>
+    <p>Rekening Kantin SMADA</p>
+    <p><b>Kode Pesanan: <span id="orderCode2"></span></b></p>
+  </div>
+  <button class="btn-custom w-100" onclick="confirmAction('pembayaranBerhasil()', 'Sudah transfer?')">Saya Sudah Transfer</button>
+</div>
+
+<!-- ===================== 5. BERHASIL ===================== -->
+<div class="page" id="pagePaid">
+  <h2>Pembayaran Berhasil</h2>
+  <div class="card text-center">
+    <p>Terima kasih!</p>
+    <p><b>Kode Pesanan: <span id="finalOrderCode"></span></b></p>
+  </div>
+  <button class="btn-custom w-100" onclick="goto('pageIdentitas')">Isi Identitas</button>
+</div>
+
+<!-- ===================== 6. IDENTITAS ===================== -->
+<div class="page" id="pageIdentitas">
+  <h2>Data Identitas</h2>
+  <div class="card">
+    <label>Nama:</label>
+    <input id="nama" class="form-control mb-2">
+
+    <label>Kelas:</label>
+    <input id="kelas" class="form-control mb-2">
+
+    <label>No HP (Opsional):</label>
+    <input id="noHp" class="form-control mb-2">
+  </div>
+
+  <button class="btn-custom w-100" onclick="confirmAction('kirimIdentitas()', 'Sudah benar?')">Kirim</button>
+</div>
+
+<!-- ===================== 7. STATUS ===================== -->
+<div class="page" id="pageStatus">
+  <h2>Status Pesanan</h2>
+  <div class="card text-center">
+    <p>Pesanan sedang disiapkan.</p>
+    <p><b>Kode Pesanan: <span id="statusOrderCode"></span></b></p>
+  </div>
+  <button class="btn-custom w-100" onclick="goto('pageEnd')">Selesai</button>
+</div>
+
+<!-- ===================== 8. END ===================== -->
+<div class="page" id="pageEnd">
+  <h2>Selamat Menikmati!</h2>
+  <div class="card text-center">
+    <p>Terima kasih sudah memesan!</p>
+    <button class="btn-custom" onclick="resetApp()">Pesan Lagi</button>
+  </div>
+</div>
+
+</div> <!-- container -->
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// ================== DATA MENU ==================
+const menu = [
+  { nama: "Nasi Goreng", harga: 15000, kategori: "makanan", gambar: "img/nasi goreng.jpg" },
+  { nama: "Nasi Uduk", harga: 13000, kategori: "makanan", gambar: "https://via.placeholder.com/300x150?text=Nasi+Uduk" },
+  { nama: "Es Teh", harga: 5000, kategori: "minuman", gambar: "https://via.placeholder.com/300x150?text=Es+Teh" },
+  { nama: "Ayam Geprek", harga: 18000, kategori: "makanan", gambar: "https://via.placeholder.com/300x150?text=Ayam+Geprek" },
+  { nama: "Mie Ayam", harga: 12000, kategori: "makanan", gambar: "https://via.placeholder.com/300x150?text=Mie+Ayam" },
+  { nama: "Sosis Bakar", harga: 8000, kategori: "makanan", gambar: "https://via.placeholder.com/300x150?text=Sosis+Bakar" },
+  { nama: "Air Mineral", harga: 4000, kategori: "minuman", gambar: "https://via.placeholder.com/300x150?text=Air+Mineral" }
+];
+
+// ================== LOCALSTORAGE FIX ==================
+let savedCart = localStorage.getItem('cart');
+let cart = [];
+
+try {
+  cart = savedCart ? JSON.parse(savedCart) : [];
+} catch (e) {
+  console.warn("LocalStorage rusak → direset.");
+  cart = [];
+  localStorage.removeItem('cart');
+}
+
+let currentCategory = 'all';
+let orderCode = "";
+
+
+// ================== GOTO PAGE ==================
+function goto(id) {
+  document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+  document.getElementById(id).style.display = "block";
+}
+
+goto("pageHome");
+
+
+// ================== TAMPILKAN MENU ==================
+function showMenu(list = menu) {
+  const m = document.getElementById("menuList");
+  m.innerHTML = "";
+
+  list.forEach(item => {
+    m.innerHTML += `
+      <div class="col-md-4">
+        <div class="card menu-item">
+          <img src="${item.gambar}">
+          <h5>${item.nama}</h5>
+          <p>Rp ${item.harga.toLocaleString()}</p>
+          <button class="btn-custom w-100" onclick="addToCart('${item.nama}')">Tambah</button>
+        </div>
+      </div>
+    `;
+  });
+}
+showMenu();
+
+
+// ================== FILTER ==================
+document.getElementById("searchInput").oninput = function() {
+  const q = this.value.toLowerCase();
+  const filtered = menu.filter(m =>
+    m.nama.toLowerCase().includes(q) &&
+    (currentCategory === "all" || m.kategori === currentCategory)
+  );
+  showMenu(filtered);
+};
+
+function filterCategory(cat) {
+  currentCategory = cat;
+  document.getElementById("searchInput").dispatchEvent(new Event("input"));
+}
+
+
+// ================== KERANJANG ==================
+function addToCart(nama) {
+  const item = menu.find(m => m.nama === nama);
+  const f = cart.find(c => c.nama === nama);
+
+  if (f) f.qty++;
+  else cart.push({ nama: item.nama, harga: item.harga, qty: 1 });
+
+  saveCart();
+  showCart();
+}
+
+function add(i) { cart[i].qty++; saveCart(); showCart(); }
+function minus(i) {
+  cart[i].qty--;
+  if (cart[i].qty <= 0) cart.splice(i,1);
+  saveCart(); showCart();
+}
+
+function clearCart() {
+  cart = [];
+  saveCart();
+  showCart();
+}
+
+function saveCart() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+function showCart() {
+  const c = document.getElementById("cartList");
+  let total = 0;
+  c.innerHTML = "";
+
+  cart.forEach((item,i) => {
+    total += item.harga * item.qty;
+
+    c.innerHTML += `
+      <div class="card cart-item">
+        <div>
+          <b>${item.nama}</b><br>
+          Rp ${item.harga.toLocaleString()} x ${item.qty}
+        </div>
+        <div class="qty-controls">
+          <button onclick="minus(${i})">-</button>
+          <span>${item.qty}</span>
+          <button onclick="add(${i})">+</button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("totalCart").textContent = total.toLocaleString();
+}
+showCart();
+
+
+// ================== PEMBAYARAN ==================
+function gotoPembayaran() {
+  if (cart.length === 0) return alert("Keranjang kosong!");
+
+  document.getElementById("payTotal").textContent =
+    document.getElementById("totalCart").textContent;
+
+  goto("pagePay");
+}
+
+function prosesPembayaran() {
+  const metode = document.querySelector("input[name='pay']:checked");
+  if (!metode) return alert("Pilih metode pembayaran!");
+
+  orderCode = "ORD-" + Date.now();
+
+  if (metode.value === "cash") {
+    document.getElementById("orderCode").textContent = orderCode;
+    goto("pageCash");
+  } else {
+    document.getElementById("orderCode2").textContent = orderCode;
+    goto("pageNonTunai");   // ← sudah diperbaiki
+  }
+}
+
+
+// ================== BERHASIL ==================
+function pembayaranBerhasil() {
+  document.getElementById('finalOrderCode').textContent = orderCode;
+  document.getElementById('statusOrderCode').textContent = orderCode;
+  goto("pagePaid");
+}
+
+
+// ================== IDENTITAS ==================
+function kirimIdentitas() {
+  let nama = document.getElementById("nama").value.trim();
+  let kelas = document.getElementById("kelas").value.trim();
+
+  if (!nama || !kelas) return alert("Nama & kelas wajib!");
+
+  goto("pageStatus");
+}
+
+
+// ================== UTIL ==================
+function confirmAction(action, msg) {
+  document.getElementById("confirmMessage").textContent = msg;
+  document.getElementById("confirmBtn").onclick = () => eval(action);
+  new bootstrap.Modal(document.getElementById("confirmModal")).show();
+}
+
+function resetApp() {
+  cart = [];
+  localStorage.removeItem("cart");
+  showCart();
+  goto("pageHome");
+}
+</script>
+
+</body>
+</html>
